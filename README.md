@@ -22,10 +22,9 @@ Design and 3D print and pan and tilt system for raspberry pi in fusion 360 ->
 - This must be done through API as it is too powerful for raspberry PI. 
 - Wait times may be weird but worth it?
 
-**
-Step 5**
+**Step 5**
 - Experiment with Raspberry PI connecting to internet without direct ethernet
 - Has rechargeable battery for device
-**
-Step 6**
+  
+**Step 6**
 - Conceal Wires and make it look more ‘buddy’ like
