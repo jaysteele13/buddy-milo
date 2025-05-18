@@ -3,7 +3,16 @@ Stationary desk buddy. Programmed to look at people when speaking to them. Using
 
 # Progress
 
+16/05/2025
 Currently I have configured the Rasberry Pi to capture 640 x 480 video and get face recognition and detection using haar cascade model for face detection due to its light wieght capabilities. Also using encoding technique to train this model on certain peoples faces ('buddies') which is through Pickle encodings. Also have a system in place to relay _x, y coordinates_ of where face is in relation to centre ounding box of face in the screen. This is so the servos will know where to look.
+
+
+18/05/2025
+Started Experimenting with USB Cam Microphone. Created a Script to take in and convert audio to 16bit wav file.
+Started planning out a cloud architecture for LLM as well as now speech recognition. (Looking at 'whisper' model for speech recognition).
+Using pavucontrol library to control gain when someone shouts into mic.
+
+
 
 # Other Steps
 **Step Two**
