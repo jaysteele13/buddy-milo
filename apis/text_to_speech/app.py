@@ -1,107 +1,69 @@
-# Pseduo Code
-
-# Configure Restful API using FastAPI with correct naming conventions -> save to README
-
-# import whisper model locally (probably tiny) await the model prediction when code is brought in
-
-# output the model output, have validation to give error if audio file is bad or incorrect
-
-# Must ensure prompt is less than 30 seconds!!!!!!!
-
-# Have rror logging if ram is used up
-
-# Have error if other thing happened
-
-# Error if server is down
-
-
-
-
-
-
-# V1
-# import whisper
-
-# model = whisper.load_model('tiny')
-# result = model.transcribe('test.wav', fp16=False)
-
-# print(result['text'])
-
-# output: Hello, my name is Jay and that's okay. You, my little. You, my little. Hey, what's going on you? What's the weather like? Hello.
-
-# V2 - Working
-# import whisper
-
-# model = whisper.load_model('base')
-# # result = model.transcribe('test.wav', fp16=False)
-
-# # load audio to fit into 30 seconds
-# audio = whisper.load_audio('../../samples/test1.wav')
-# audio = whisper.pad_or_trim(audio)
-
-# # Make log-Mel spectrogram and move to same device as model
-# # Converting Audio analog to digital in a logarithmic way
-# mel = whisper.log_mel_spectrogram(audio).to(model.device)
-
-# # detect spoken language
-# _, probs = model.detect_language(mel)
-# print(f'Detected language: {max(probs, key=probs.get)}')
-
-# # decode audio for string
-# options = whisper.DecodingOptions()
-# result = whisper.decode(model,mel,options)
-
-# # Print String Result
-# print(result.text)
-
-# # with Tiny: Yes sir, watch the surf like, Donnellite, you mylo, you mylo, y
-# # you mylo, you mylo. Hello, fun, Xbox. Cook, cool, yeah, yeah, that's the set man. Yeah, good luck, glasses, you mylo. You mylo, watch the surf like, watch the weather like.
-
-# #with base
-# # Yes sir, watch the surf like, Donnellite, you mylo, you mylo, you mylo, you mylo. Hello, fun, Xbox. Cook, cool, yeah, yeah, 
-# # that's the set man. Yeah, good luck, glasses, you mylo. You mylo, watch the surf like, watch the weather like.
-
-
-
-# V3 with ram usage monitoring!
+from fastapi import FastAPI, File, UploadFile, HTTPException, Header
 import whisper
-import psutil
 import os
+import tempfile
+from fastapi.responses import JSONResponse
 
-def get_memory_usage_mb():
-    process = psutil.Process(os.getpid())
-    mem_info = process.memory_info()
-    return mem_info.rss / (1024 ** 2)  # Convert bytes to MB
+from dotenv import load_dotenv
+load_dotenv()
 
-# Monitor RAM before loading model
-print(f"RAM Before loading model: {get_memory_usage_mb():.2f} MB")
+app = FastAPI()
 
-# Change 'base' to 'tiny' to compare
-model = whisper.load_model('models/tiny.pt', device="cpu")
+key = os.getenv('API_KEY')
+print(key)
 
-print(f"RAM After loading model: {get_memory_usage_mb():.2f} MB")
+# Load whisper model (tiny for speed)
+model = whisper.load_model("models/tiny.pt", device="cpu")
 
-# load audio to fit into 30 seconds
-audio = whisper.load_audio('../../samples/test1.wav')
-audio = whisper.pad_or_trim(audio)
+# Max file size: 10 MB (adjust if needed)
+MAX_FILE_SIZE_MB = 10
 
-# Make log-Mel spectrogram and move to same device as model
-mel = whisper.log_mel_spectrogram(audio).to(model.device)
+@app.post("/transcribe")
+async def transcribe(file: UploadFile = File(...),
+                     x_api_key: str = Header(...)):
+    
+    # auth
+    print(key)
+    if x_api_key != key:
+        raise HTTPException(status_code=401, detail='Invalid API Key Yo!')
 
-print(f"RAM After preprocessing audio: {get_memory_usage_mb():.2f} MB")
+    # 1. Check file extension
+    if not file.filename.lower().endswith(".wav"):
+        raise HTTPException(status_code=400, detail="File must be a .wav format")
 
-# detect spoken language
-_, probs = model.detect_language(mel)
-print(f"Detected language: {max(probs, key=probs.get)}")
+    # 2. Save to temp file
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+            contents = await file.read()
+            if len(contents) > MAX_FILE_SIZE_MB * 1024 * 1024:
+                raise HTTPException(status_code=413, detail="File too large (max 10 MB)")
+            tmp.write(contents)
+            tmp_path = tmp.name
+    except Exception:
+        raise HTTPException(status_code=500, detail="Failed to process file")
 
-# decode audio for string
-options = whisper.DecodingOptions()
-result = whisper.decode(model, mel, options)
+    try:
+        # 3. Load and process audio
+        audio = whisper.load_audio(tmp_path)
+        audio = whisper.pad_or_trim(audio)
+        mel = whisper.log_mel_spectrogram(audio).to(model.device)
 
-print(f"RAM After decoding: {get_memory_usage_mb():.2f} MB")
+        # 4. Decode
+        options = whisper.DecodingOptions()
+        result = whisper.decode(model, mel, options)
+        transcription = result.text.strip()
 
-# Print String Result
-print(result.text)
+        if not transcription:
+            raise HTTPException(status_code=404, detail="No speech found in audio.")
 
-# Base Ram: 800; Base superior in transcription
-# Tiny Ram: 600; Tiny is better for RAM!
+        return JSONResponse(content={"transcription": transcription})
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
+
+    finally:
+        # 5. Clean up temp file
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+
+
