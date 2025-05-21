@@ -12,6 +12,8 @@ Started Experimenting with USB Cam Microphone. Created a Script to take in and c
 Started planning out a cloud architecture for LLM as well as now speech recognition. (Looking at 'whisper' model for speech recognition).
 Using pavucontrol library to control gain when someone shouts into mic.
 
+20/05/2025
+Have Created a python script that uses whisper 'tiny' to convert .wav files to a string. This is hosted through FastAPI. Currently 'dockerising' this app into an image which I plan to host on Google Cloud Run Free Tier. Have an API key set so my PI will be able to hit this endpoint and move on to the next step which will be manipulating an LLM (Model and experimentation yet to be decided).
 
 
 # Other Steps
