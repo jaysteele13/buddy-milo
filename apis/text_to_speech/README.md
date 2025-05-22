@@ -1,3 +1,8 @@
+# How to run service
+```
+uvicorn app:app
+```
+
 # How to hit endpoint
 
 Use this curl command in terminal ( I lazy and don't install postman)
