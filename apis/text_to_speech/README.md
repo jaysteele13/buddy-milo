@@ -23,3 +23,7 @@ Base: 800mb
 ```
 curl -X POST https://buddy-milo-img-598905806145.europe-west4.run.app/transcribe   -H "x-api-key: <env-key>"   -F "file=@test1.wav"
 ```
+
+# Must transfer API.json key to rasberry pi and pip install google-auth requests to have authentication to private endpoint.
+
+This key has access to 'api-client' which has IAM role to use endpoint.
