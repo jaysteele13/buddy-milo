@@ -15,6 +15,12 @@ Using pavucontrol library to control gain when someone shouts into mic.
 20/05/2025
 Have Created a python script that uses whisper 'tiny' to convert .wav files to a string. This is hosted through FastAPI. Currently 'dockerising' this app into an image which I plan to host on Google Cloud Run Free Tier. Have an API key set so my PI will be able to hit this endpoint and move on to the next step which will be manipulating an LLM (Model and experimentation yet to be decided).
 
+23/05/2025
+Due to the size of pytorch, the image created was 10GB. I have instead opted for using a more quantised version of whisper which has been compiled in C++. This avoids the need for pytorch. In doing this I have dockerised the code and create an image.
+Using Google Cloud Run Free Tier I have uploaded this image in the artifact repository for google cloud. In addition I have also made this endpoint authorised only to avoid DDoS attacks and traffic. The endpoint is now only accessible by two keys, on api.json and another is string api key.
+
+The endpoint can be hit from any compute device as long as there is wifi and these keys. The main drawback is the time it takes to process this, which is 11 seconds on average. Future work would be potenially spending money on a more powerful compute server to get faster times, or just potentially hosting local servers from my PC. However one of the main goals is to have this robot isolated, so all it needs is to be charged and have WiFi connection.
+
 
 # Other Steps
 **Step Two**
