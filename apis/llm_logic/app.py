@@ -22,7 +22,7 @@
     # word with different vowel
 
 import re
-from surf_logic import surf_forecast
+from surf_logic import surf_forecast, BEACH_NAMES
 import random
 
 # use bbc weather for weather
@@ -52,8 +52,23 @@ def milk_is_what():
 def check_for_main_prompt(sentence):
     sentence = sentence.lower()
 
-    if re.search(r'\b(surf|serf)\b', sentence): # also search for east strand or west strand, if these are found pass in beach if not use default which is east the beast
+    if re.search(r'\b(surf|serf)\b', sentence): 
+        if re.search(r'\b(west)\b', sentence) and re.search(r'\b(today)\b',sentence): 
+            return surf_forecast(beach=BEACH_NAMES.west_strand.value, today=True)
+        elif re.search(r'\b(west)\b', sentence) and re.search(r'\b(tommorow)\b', sentence): 
+            return surf_forecast(beach=BEACH_NAMES.west_strand.value, today=False)
+        elif re.search(r'\b(west)\b', sentence):
+            return surf_forecast(beach=BEACH_NAMES.west_strand.value, today=True)
+        
+        if re.search(r'\b(east)\b', sentence) and re.search(r'\b(today)\b', sentence): 
+            return surf_forecast(beach=BEACH_NAMES.east_strand.value, today=True)
+        elif re.search(r'\b(east)\b', sentence) and re.search(r'\b(tommorow)\b', sentence): 
+            return surf_forecast(beach=BEACH_NAMES.east_strand.value, today=False)
+        elif re.search(r'\b(east)\b', sentence):
+            return surf_forecast(beach=BEACH_NAMES.east_strand.value, today=True)
+        
         return surf_forecast()
+
     elif re.search(r'\bweather\b', sentence):
         return weather_forecast()
     elif re.search(r'\bmilk\b', sentence):
@@ -64,7 +79,7 @@ def check_for_main_prompt(sentence):
 
 if __name__ == "__main__":
 
-    sentence = 'i needa serf  right now'
-    print(check_for_main_prompt(sentence))
+    sentence = 'i needa serf at west strand tommorow right now'
+    print(f"Given Prompt:\n{sentence}\n\nResponse:\n{check_for_main_prompt(sentence)}")
 
 

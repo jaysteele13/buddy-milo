@@ -1,4 +1,8 @@
 .env
 __pycache__
 api-client-key.json
+apis/llm_logic/.cache.sqlite
 .cache.sqlite
+.sqlite
+sqlite
+cache.sqlite
