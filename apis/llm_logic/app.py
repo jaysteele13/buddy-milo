@@ -1,33 +1,7 @@
-# give the string as parameter
-
-# before using the llm for general trained buddy talk look for key words
-
-# Surf
-# Check surf in west strand and east strand portrush
-
-# Weather -> check weather in Portrush
-
-# 'Milk' -> yes, my milk is delicious
-
-# 'Beatbox' play .wav of beatbox.wav
-
-# Anything else process in LLM 'Using Big Brain'
-
-
-# Series of Regex and If statements
-
-# def possible_words(word):
-    # [reg word[i] word in order]
-    #   word phentically
-    # word with different vowel
-
 import re
 from surf_logic import surf_forecast, BEACH_NAMES
+from weather_logic import weather_forecast
 import random
-
-# use bbc weather for weather
-def weather_forecast():
-    return
 
 
 def milk_is_what():
@@ -38,15 +12,6 @@ def milk_is_what():
                'MILK']
     random_idx = random.randrange(0, len(phrases)-1)
     return phrases[random_idx]
-
-
-
-
-
-
-
-
-
 
 
 def check_for_main_prompt(sentence):
@@ -68,6 +33,10 @@ def check_for_main_prompt(sentence):
             return surf_forecast(beach=BEACH_NAMES.east_strand.value, today=True)
         
         return surf_forecast()
+    
+
+
+
 
     elif re.search(r'\bweather\b', sentence):
         return weather_forecast()
@@ -79,7 +48,11 @@ def check_for_main_prompt(sentence):
 
 if __name__ == "__main__":
 
-    sentence = 'i needa serf at west strand tommorow right now'
+    milk_sentence = 'uh so u like milk milo?'
+    weather_sentence = 'weather like?'
+    surf_sentence = 'i needa serf at east  strand today right now'
+
+    sentence = weather_sentence
     print(f"Given Prompt:\n{sentence}\n\nResponse:\n{check_for_main_prompt(sentence)}")
 
 

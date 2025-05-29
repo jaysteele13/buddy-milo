@@ -189,7 +189,7 @@ def surf_status(wave_size, wave_period, wind_direction_status):
 def build_stats(wave_size, wave_period, wind_direction, wind_status, time_idx):
     return f"{convert_hour(time_idx)} with a wave size of {wave_size}ft, period of {wave_period} seconds, wind direction of {wind_direction} and a wave status of {wind_status}\n"
 
-def compile_sentence(wave_size, wave_period, wind_direction, wind_status, wave_status, date, beach, today, andy_phrases):
+def compile_sentence(wave_size, wave_period, wind_direction, wave_status, date, beach, today, andy_phrases):
 
     def remove_time_from_date(date_str):
         # Assumes format like "28 May 2pm"
@@ -325,9 +325,6 @@ def surf_forecast(beach = BEACH_NAMES.east_strand.value, today = True):
     windStatus = offshoreChecker(windDirections, beach)
 
 
-
-    # print(windStatus)
-
     # 6: Wave Status
     waveStatus = surf_status(wave_size= waveHeights, 
                       wave_period=wavePeriods,
@@ -337,5 +334,5 @@ def surf_forecast(beach = BEACH_NAMES.east_strand.value, today = True):
 
    
     # 7. Return Compiled Sentence
-    return compile_sentence(wave_size=waveHeights, wave_period=wavePeriods, wind_direction=windDirections, wind_status=windStatus, wave_status=waveStatus, date=dates, andy_phrases=andy_phrases
+    return compile_sentence(wave_size=waveHeights, wave_period=wavePeriods, wind_direction=windDirections, wave_status=waveStatus, date=dates, andy_phrases=andy_phrases
                             ,beach=beach, today=today)
