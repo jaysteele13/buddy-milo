@@ -21,6 +21,16 @@ Using Google Cloud Run Free Tier I have uploaded this image in the artifact repo
 
 The endpoint can be hit from any compute device as long as there is wifi and these keys. The main drawback is the time it takes to process this, which is 11 seconds on average. Future work would be potenially spending money on a more powerful compute server to get faster times, or just potentially hosting local servers from my PC. However one of the main goals is to have this robot isolated, so all it needs is to be charged and have WiFi connection.
 
+01/06/2025
+
+So I have created a system where the chatbot takes in a string and currently, outputs surf forecasts of portush's east and west strand for the current day or day after depending on request which is aquired using regex. Done the same but for weather with a weather API. Have a secret function about milk with robot.
+
+I have also begun training the small LLM, I have experimented with tiny models such as tiny-llama and others with arond 100m params, current progress is bleak. I have made a custom dataset with over 500 lines of content I would like the robot to act like. Due to the 1.1b params from tiny-llama I fear it may be to big to coherse with such a small dataset so will look elsewhere.
+
+I have programming this in google colab, and using BitsAndBytes to load it in quantised so it trains better. Have experimented with using axolotl locally and on Collab to no avail, Linux Mint is not the ideal distro to try docker-nvidia relations it seems. I did however sucessfully install cuda and make it compatible with my current GPU. Due to Colab though, I have yet to use this.
+
+The Short Term plan is to continue trying to find smaller models and test them with my common questions, once this is done, then I can experiment with llama.cpp to try and quantise this model to make it run better on the CPU and hopefully deploy this second endpoint as an image to google cloud run.
+
 
 # Other Steps
 **Step Two**

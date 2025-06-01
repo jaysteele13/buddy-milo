@@ -35,9 +35,6 @@ def check_for_main_prompt(sentence):
         return surf_forecast()
     
 
-
-
-
     elif re.search(r'\bweather\b', sentence):
         return weather_forecast()
     elif re.search(r'\bmilk\b', sentence):
