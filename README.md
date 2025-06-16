@@ -31,6 +31,16 @@ I have programming this in google colab, and using BitsAndBytes to load it in qu
 
 The Short Term plan is to continue trying to find smaller models and test them with my common questions, once this is done, then I can experiment with llama.cpp to try and quantise this model to make it run better on the CPU and hopefully deploy this second endpoint as an image to google cloud run.
 
+15/06/2025
+
+After weeks of tinkering I have realised fine-tuning and transfer learning with pre-existing models is the way to go. With help of my own intuition and Big LLM prompting, I have created a small dataset to train my desired model on.
+
+I have experimented with state of the art models from hugging face, training models with my dataset on tiny llms ranging from 50m - 1.8B parameters. Ultimately. My dataset is not big enough to change the tone of a bigger dataset with 1B params, and the smaller llms with around 100-200M don't have enough intelligence to work. I have landed on a fine tuned model based off of Llama's tiny LLM. Link [here](https://huggingface.co/AlexandrosChariton/SarcasMLL-1B). This model utilises a big broad sarcastic, nothing answer which is the kind of vibe I wanted.
+
+I used Llama.cpp to load in this quantised model.
+
+In addition I have now gained access to an old laptop which I am going to convert to a home private server which will now run these endpoints rather than google cloud run. This will increase the speed drastically. Talk about this later...
+
 
 # Other Steps
 **Step Two**
