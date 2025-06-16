@@ -6,3 +6,4 @@ apis/llm_logic/.cache.sqlite
 .sqlite
 sqlite
 cache.sqlite
+SarcasMLL-1B.Q4_K_M.gguf
