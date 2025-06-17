@@ -11,7 +11,7 @@ def get_llm():
     global _llm
     if _llm is None:
         _llm = Llama(
-            model_path="SarcasMLL-1B.Q4_K_M.gguf",
+            model_path="llm_logic/SarcasMLL-1B.Q4_K_M.gguf",
             n_ctx=2048,
             n_threads=8,
             verbose=False

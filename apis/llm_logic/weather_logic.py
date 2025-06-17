@@ -4,7 +4,7 @@ import pandas as pd
 import requests_cache
 from retry_requests import retry
 import numpy as np
-from weather_codes import weather_codes
+from llm_logic.weather_codes import weather_codes
 from enum import Enum
 
 def NumToWhole(temp):

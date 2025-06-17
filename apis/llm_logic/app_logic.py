@@ -1,7 +1,7 @@
 import re
-from surf_logic import surf_forecast, BEACH_NAMES
-from weather_logic import weather_forecast
-from llm import get_response
+from llm_logic.surf_logic import surf_forecast, BEACH_NAMES
+from llm_logic.weather_logic import weather_forecast
+from llm_logic.llm import get_response
 import random
 
 

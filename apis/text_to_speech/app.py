@@ -1,63 +1,50 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException, Header
+from fastapi import APIRouter, Header, HTTPException, Request
+from pydantic import BaseModel
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi import FastAPI, HTTPException, Header
 import os
-import tempfile
-import subprocess
-from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
+from text_to_speech.model_logic import text2speech, generate_full_audio
+import asyncio
+
 load_dotenv()
 
-app = FastAPI()
+router = APIRouter()
 API_KEY = os.getenv("API_KEY")
 
 
-# Path to whisper.cpp binary and model
-WHISPER_CPP_BINARY = "./whisper.cpp/build/bin/whisper-cli"
-MODEL_PATH = "./whisper.cpp/models/ggml-tiny.en.bin"
 
-@app.post("/transcribe")
-async def transcribe(file: UploadFile = File(...),
-                     x_api_key: str = Header(...)):
+class SpeechRequest(BaseModel):
+    sentence: str
 
+# @router.post("/")
+# async def transcribe(request: SpeechRequest,
+#                      x_api_key: str = Header(..., alias="x-api-key")):
+    
+   
+
+#     if x_api_key != API_KEY:
+#         raise HTTPException(status_code=401, detail="Unauthorized")
+
+#     if not request.sentence.strip():
+#         raise HTTPException(status_code=400, detail="Sentence must be populated")
+
+#     try:
+#         wavfilepath = text2speech(request.sentence)
+#         return FileResponse(wavfilepath, media_type="audio/wav", filename="output.wav")
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Error: {e}")
+    
+@router.post("/")
+async def synthesize(request: SpeechRequest, x_api_key: str = Header(...)):
     if x_api_key != API_KEY:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
-    if not file.filename.lower().endswith(".wav"):
-        raise HTTPException(status_code=400, detail="Only .wav files supported")
-
+        raise HTTPException(status_code=401)
+    if not request.sentence.strip():
+        raise HTTPException(status_code=400, detail="Text is empty.")
     try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
-            contents = await file.read()
-            tmp.write(contents)
-            tmp_path = tmp.name
+        output_file = await asyncio.to_thread(generate_full_audio, request.sentence)
+        return FileResponse(output_file, media_type="audio/wav")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {e}")
 
-        # Run whisper.cpp with subprocess
-        result = subprocess.run(
-            [ WHISPER_CPP_BINARY, 
-             "-m", MODEL_PATH,
-             "-f", tmp_path, 
-             "-otxt", 
-             "-of", "output"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
-        )
-
-
-        if result.returncode != 0:
-            raise HTTPException(status_code=500, detail=result.stderr)
-
-        with open("output.txt", "r") as f:
-            transcription = f.read().strip()
-        
-
-        if not transcription:
-            raise HTTPException(status_code=404, detail="No speech found")
-        
-        return JSONResponse(content={"transcription": transcription})
-
-    finally:
-        if os.path.exists(tmp_path):
-            os.remove(tmp_path)
-        if os.path.exists("output.txt"):
-            os.remove("output.txt")
 

@@ -187,7 +187,7 @@ def surf_status(wave_size, wave_period, wind_direction_status):
 # Key times for kowabonga gotta be 9am with a wave size of 3ft, period of 11s wind direction of SE
 # and status of Offshore
 def build_stats(wave_size, wave_period, wind_direction, wind_status, time_idx):
-    return f"{convert_hour(time_idx)} with a wave size of {wave_size}ft, period of {wave_period} seconds, wind direction of {wind_direction} and a wave status of {wind_status}\n"
+    return f"{convert_hour(time_idx)} with a wave size of {wave_size}ft, period of {wave_period} seconds, wind direction of {wind_direction} and a wave status of {wind_status}. "
 
 def compile_sentence(wave_size, wave_period, wind_direction, wave_status, date, beach, today, andy_phrases):
 
@@ -213,8 +213,8 @@ def compile_sentence(wave_size, wave_period, wind_direction, wave_status, date, 
         wave_status = WAVE_STATUS.bad.value
 
     sentence = (
-        f"Surf at {beach} is looking hella {wave_status} {'today' if today else 'tomorrow'} - {new_date}.\n"
-        f"Key times to surf are the following:\n\n"
+        f"Surf at {beach} is looking hella {wave_status} {'today' if today else 'tomorrow'}, {new_date}. "
+        f"Key times to surf are the following. "
         f"{build_stats(wave_size=wave_size[nine_am], wave_period=wave_period[nine_am], wind_direction=wind_direction[nine_am], wind_status=andy_phrases[nine_am], time_idx=9)}"
         f"{build_stats(wave_size=wave_size[two_pm], wave_period=wave_period[two_pm], wind_direction=wind_direction[two_pm], wind_status=andy_phrases[two_pm], time_idx=14)}"
         f"{build_stats(wave_size=wave_size[six_pm], wave_period=wave_period[six_pm], wind_direction=wind_direction[six_pm], wind_status=andy_phrases[six_pm], time_idx=18)}"

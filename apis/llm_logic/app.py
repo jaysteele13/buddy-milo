@@ -1,15 +1,15 @@
-from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi import FastAPI, Header, HTTPException, Request, APIRouter
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 from fastapi import FastAPI, File, UploadFile, HTTPException, Header
 import os
 from dotenv import load_dotenv
-from app_logic import check_for_main_prompt
 
-app = FastAPI()
+from llm_logic.app_logic import check_for_main_prompt
+
 load_dotenv()
 
-app = FastAPI()
+router = APIRouter()
 API_KEY = os.getenv("API_KEY")
 
 
@@ -17,7 +17,7 @@ API_KEY = os.getenv("API_KEY")
 class PersonalityRequest(BaseModel):
     sentence: str
 
-@app.post("/personality")
+@router.post("/")
 async def transcribe(request: PersonalityRequest,
                      x_api_key: str = Header(..., alias="x-api-key")):
     
