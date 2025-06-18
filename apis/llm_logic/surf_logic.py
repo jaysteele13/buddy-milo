@@ -6,52 +6,6 @@ from enum import Enum
 import numpy as np
 import random
 
-# Must take this data and process values:
-# get swell Direction in 12 angles
-# Get wind direction in twelve angles
-# if wind direction is SE it is offshore wind for west strand
-# if SW it is offshore for east strand.
-# if wind is south and wind low swell could be good
-# if wind is low and swell direction is NW could be good
-
-# Based on these calculated values output a string that initially says if the swell is bummer, mid or gnarly
-# followed by predicted conditions for what ever beach (offshore wind (wind direction), decent size (swell direction) good wind speed (wind speed) and whatever tide is (tide))
-
-# Open Meteo is the best option (Take with grain of salt)
-
-# This will only get today and tomorrow predictions
-# It will only give certain times to make it easy for chatbotV1
-
-# General Script will go Like:
-
-# "Surf at beach_name is (description word of good/mid/bad surf) on date.
-# Key times to surf time: wave_size, period, wind direction, wave_status (offshore)
-# Do this for 9am, 2pm, 6pm
-
-# Example in full
-# Surf at west strand is looking hella gnarly on monday 25th may.
-# Key times for kowabonga gotta be 9am with a wave size of 3ft, period of 11s wind direction of SE
-# and status of Offshore
-
-
-# Function to Convert date to Day Num Month (String) (Done)
-# Function to put wave height to nearest .5 (1st dec place) (Done)
-# Function to give in whol number (times by 1.5 open meteo is kind of awful for nc beaches) (Done)
-# Function to convert 360 number (0 being North 90being east etc) (Done)
-# Offshore Checker West Prefers (SE) East Prefers (SW) delve from this a little bit and it is Cross Offshore (Done)
-    # anything else just call 'messy yo'
-# Function to declare if surf is 'gnarly' 'mid' or 'trash' (Done)
-# Amend function accept regex for surf, then determine if west or east strand are mentioned, if not
-    # default to east strand
-
-
-# Function to compile sentence with all of this data and return it
-
-
-
-# Getting started with config
-# 1. Function to Convert date to Day Num Month (String)
-
 def convert_hour(hour):
         if hour == 0:
             return '12am'
@@ -100,8 +54,8 @@ def wavePeriodToSeconds(wavePeriods):
 # 4. Function to convert 360 number (0 being North 90being east etc)
 def mapDegreeToDirection(directions):
     new_directions = []
-    dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 
-            'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
+    dirs = ['North', 'North North East', 'North East', 'East North East', 'East', 'East South East', 'South East', 'South South East', 
+            'South', 'South South West', 'South West', 'West South West', 'West', 'West North West', 'North West', 'North North West']
     
     for deg in directions:
         ix = round(deg / (360. / len(dirs))) % len(dirs)
@@ -114,17 +68,17 @@ def offshoreChecker(directions, beach):
 
     for deg in directions:
         if beach == BEACH_NAMES.west_strand.value:
-            if deg in ['SE', 'SSE']:
+            if deg in ['South East', 'South South East']:
                 new_status.append('Offshore')
-            elif deg == 'S':
+            elif deg == 'South':
                 new_status.append('Cross Offshore')
             else:
                 new_status.append('Onshore')
 
         elif beach == BEACH_NAMES.east_strand.value:
-            if deg in ['SW', 'SSW']:
+            if deg in ['South West', 'South South West']:
                 new_status.append('Offshore')
-            elif deg == 'S':
+            elif deg == 'South':
                 new_status.append('Cross Offshore')
             else:
                 new_status.append('Onshore')
@@ -187,7 +141,7 @@ def surf_status(wave_size, wave_period, wind_direction_status):
 # Key times for kowabonga gotta be 9am with a wave size of 3ft, period of 11s wind direction of SE
 # and status of Offshore
 def build_stats(wave_size, wave_period, wind_direction, wind_status, time_idx):
-    return f"{convert_hour(time_idx)} with a wave size of {wave_size}ft, period of {wave_period} seconds, wind direction of {wind_direction} and a wave status of {wind_status}. "
+    return f"{convert_hour(time_idx)} with a wave size of {wave_size} feet, period of {wave_period} seconds, wind direction of {wind_direction} and a wave status of {wind_status}. "
 
 def compile_sentence(wave_size, wave_period, wind_direction, wave_status, date, beach, today, andy_phrases):
 
@@ -213,7 +167,7 @@ def compile_sentence(wave_size, wave_period, wind_direction, wave_status, date, 
         wave_status = WAVE_STATUS.bad.value
 
     sentence = (
-        f"Surf at {beach} is looking hella {wave_status} {'today' if today else 'tomorrow'}, {new_date}. "
+        f"Surf at {beach} is looking hella {wave_status} {'today' if today else 'tomorrow'}, date being, {new_date}. "
         f"Key times to surf are the following. "
         f"{build_stats(wave_size=wave_size[nine_am], wave_period=wave_period[nine_am], wind_direction=wind_direction[nine_am], wind_status=andy_phrases[nine_am], time_idx=9)}"
         f"{build_stats(wave_size=wave_size[two_pm], wave_period=wave_period[two_pm], wind_direction=wind_direction[two_pm], wind_status=andy_phrases[two_pm], time_idx=14)}"

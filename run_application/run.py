@@ -1,47 +1,16 @@
-# A service which runs all services and can hit endpoints asynchronously and extract the purpose
-
-
-
-# Feature
-# # Say something for a prompt (wait for speak)
-
-
-# # Function to accept audio into wav
-# def recieve_prompt():
-#     prompt = False
-#     while prompt != True:
-#         listen_to_audio()
-#         if quiet:
-#             prompt = True
-#             audio = write_audio
-
-
-# # Process this to text using endpoint hit - curl -X POST http://127.0.0.1:8000/transcribe/   -H "x-api-key: pi_is_awesome"   -F "file=@audio.wav"
-# sentence = curl transcribe
-
-
-# # Get this text then Process it in llm endpoint - curl -X POST http://127.0.0.1:8000/personality/   -H "x-api-key: pi_is_awesome"   -H "Content-Type: application/json"   -d '{"sentence": "im bored what should i do"}'
-# new_sentence = curl personaility(sentence)
-
-
-# # process this then finally put it into the text to speech endpoint curl -X POST http://127.0.0.1:8000/text2speech/   -H "x-api-key: pi_is_awesome"   -H "Content-Type: application/json"   -d '{"sentence": "im bored what should i do"}'   -o "myOutput.wav"
-
-# new_audio = curl text2speech(new_sentence)
-
-# # once recieved play the myOutput.wav
-
-# play(new_audio)
-
 import sounddevice as sd
 import numpy as np
 import scipy.io.wavfile as wav
 import requests
+import playsound
+import os
+
 
 API_KEY = "pi_is_awesome"
 AUDIO_FILE = "audio.wav"
 TTS_OUTPUT = "myOutput.wav"
 
-def receive_prompt(duration_seconds=5, sample_rate=16000):
+def receive_prompt(duration_seconds=7, sample_rate=16000):
     print(f"🎤 Recording for {duration_seconds} seconds...")
 
     recording = sd.rec(
@@ -113,15 +82,27 @@ def synthesize_speech(sentence):
 # === Play final output ===
 def play_output(file_path):
     print("🎧 Playing response...")
-    # wave_obj = sa.WaveObject.from_wave_file(file_path)
-    # play_obj = wave_obj.play()
-    # play_obj.wait_done()
+    playsound.playsound(file_path, block=True)
 
 
 # === MAIN FLOW ===
 if __name__ == "__main__":
-    receive_prompt()
-    sentence = transcribe_audio()
-    new_sentence = process_personality(sentence)
-    synthesize_speech(new_sentence)
-    play_output(TTS_OUTPUT)
+
+    os.system('cls' if os.name == 'nt' else 'clear')
+    print("\nWelcome to Milo, sarcastic surf buddy dude! 🌊")
+    while True:
+
+      user_input = input("\nPress [t] to speak or [q] to quit or just 'ctrl c' ya savage!: ").strip().lower()
+
+      if user_input == 'q':
+        break
+
+      if user_input == 't':
+        receive_prompt()
+        sentence = transcribe_audio()
+        new_sentence = process_personality(sentence)
+        synthesize_speech(new_sentence)
+        play_output(TTS_OUTPUT)
+        os.system('cls' if os.name == 'nt' else 'clear')
+      else:
+          print('bitch give me something real!')

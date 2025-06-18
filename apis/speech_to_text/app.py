@@ -16,7 +16,7 @@ API_KEY = os.getenv("API_KEY")
 
 # So would be below amend after dinner then can think about expanding to home server when all works!
 WHISPER_CPP_BINARY = "./speech_to_text/whisper.cpp/build/bin/whisper-cli"
-MODEL_PATH = "speech_to_text/whisper.cpp/models/ggml-tiny.en.bin"
+MODEL_PATH = "speech_to_text/whisper.cpp/models/ggml-base.en.bin"
 
 @router.post("/")
 async def transcribe(file: UploadFile = File(...),

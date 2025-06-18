@@ -5,9 +5,9 @@ from misaki import en, espeak
 import json
 import re
 from pydub import AudioSegment
-from text_to_speech.kokoro.kokoro import phonemize, tokenize
+from kokoro.kokoro import phonemize, tokenize
 
-with open("text_to_speech/kokoro/config.json", "r") as f:
+with open("kokoro/config.json", "r") as f:
     config = json.load(f)
 
 
@@ -33,7 +33,7 @@ def insert_pauses(phoneme_str: str, pause_token="SP") -> str:
 
 # did a pip install -q "misaki[en]"
 
-dir_name = "text_to_speech/kokoro"
+dir_name = "kokoro"
 token_path = f"{dir_name}/tokenizer.json"
 model_name = f"{dir_name}/model_q4.onnx"
 voice_path = f"{dir_name}/bm_lewis.bin"
@@ -65,8 +65,6 @@ def text2speech(text):
     phonems = phonemize(text, 'b')
 
     tokens = tokenize(phonems)
-    # Context length is 512, but leave room for the pad token 0 at the start & end
-
     # Context length is 512, but leave room for the pad token 0 at the start & end
     assert len(tokens) <= 510, len(tokens)
 
@@ -106,6 +104,9 @@ def generate_full_audio(text):
     final_output = "final_output.wav"
     audio.export(final_output, format="wav")
     return final_output
+
+
+generate_full_audio('hi there little gay man. God you are such a fruity little penis man muncher, holy hell, hi there little gay man. God you are such a fruity little penis man muncher, holy hell, hi there little gay man. God you are such a fruity little penis man muncher, holy hell')
 
 
 
