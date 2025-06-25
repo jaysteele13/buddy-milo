@@ -7,4 +7,4 @@ apis/llm_logic/.cache.sqlite
 sqlite
 cache.sqlite
 SarcasMLL-1B.Q4_K_M.gguf
-text_to_speech/kokoro/model_q4.onnx
+apis/text_to_speech/kokoro/model_q4.onnx

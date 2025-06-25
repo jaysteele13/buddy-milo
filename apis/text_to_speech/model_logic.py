@@ -1,7 +1,6 @@
 import numpy as np
 from onnxruntime import InferenceSession
 import scipy.io.wavfile as wavfile
-from misaki import en, espeak
 import json
 import re
 from pydub import AudioSegment
