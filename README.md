@@ -41,27 +41,42 @@ I used Llama.cpp to load in this quantised model.
 
 In addition I have now gained access to an old laptop which I am going to convert to a home private server which will now run these endpoints rather than google cloud run. This will increase the speed drastically. Talk about this later...
 
+28/06/2025
+
+So I have officially set up this old laptop with Xubuntu and it runs an isolated version of my milo code which is exposed privately within the home network. I configured my router to give this old laptop a static IP address so it remains the same throughout reboots. On login it runs the server using a gnome-terminal to visualise the endpoint being hit.
+
+The 3D Printed parts came and I have assembled milo. He is looking rough but in this current state may work. I have used an old Power MB v2 from eleego to safely power the SG90s as it regulates 9v power nicely. I will continue to use ethernet port for this project as even though I could add a wifi module to the rasberry pi this is currently out of budget. I am using an old bluetooth speaker and microphone as I/O.
+
+When attempting to mess with my rasberry pi further I realised my SD card I was using was less than 10 m/s write speed, hence it failed a diagnostic check. I have now ordered a better SD with the hopes to improve general dev speed with my rasberry pi ontop of some slight processing improvements.
 
 # Other Steps
-**Step Two**
+**Step Two** (Done)
 Design and 3D print and pan and tilt system for raspberry pi in fusion 360 ->
 1. Is it possible to make a case for raspberry pi as well as pan and tilt system so CPU gets adequate cooling
 2. Looks ok and pan and tilt isn’t top heavy
 3. Have additional power source to power Servos
 
-**Step Three**
+**Step Three** (Done)
 - Begin looking up how LLM and Speech recognition work on a raspberry pi
 - Start by talking to raspberry pi through microphone and getting input
 - From their start playing with speakers and output
 
-**Step 4**
+**Step 4** (Done)
 - Either train and use another llm or attempt to make one then host it on free tier amazon cloud service. 
 - This must be done through API as it is too powerful for raspberry PI. 
 - Wait times may be weird but worth it?
 
-**Step 5**
+**Step 5** (Now not out of scope but - focusing on core logic and getting to work)
 - Experiment with Raspberry PI connecting to internet without direct ethernet
 - Has rechargeable battery for device
-  
-**Step 6**
+
+**Step 6** (Currently Doing)
+- Connect Server in network to milo
+- properly configure how milo will interact with recognised and non recognised people
+- configure LEDs green when talking red when on standby, blue when listening
+- should he be triggered by a wake word. If person in frame grab audio and look for wake word using endpoint and regex?
+- listen to voice based on sensitvity or just record for 10 seconds? (lazy option)
+- tests and fail checks if API doesn't connect?
+- add easter egg if you ask milo to 'drop a beat'
+**Step 7**
 - Conceal Wires and make it look more ‘buddy’ like
