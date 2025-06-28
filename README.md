@@ -43,6 +43,8 @@ In addition I have now gained access to an old laptop which I am going to conver
 
 28/06/2025
 
+I then used a quantised version of TTS model Kokoro which has been highly improved for quantisation - link to hugging face model [here](https://huggingface.co/hexgrad/Kokoro-82M)
+
 So I have officially set up this old laptop with Xubuntu and it runs an isolated version of my milo code which is exposed privately within the home network. I configured my router to give this old laptop a static IP address so it remains the same throughout reboots. On login it runs the server using a gnome-terminal to visualise the endpoint being hit.
 
 The 3D Printed parts came and I have assembled milo. He is looking rough but in this current state may work. I have used an old Power MB v2 from eleego to safely power the SG90s as it regulates 9v power nicely. I will continue to use ethernet port for this project as even though I could add a wifi module to the rasberry pi this is currently out of budget. I am using an old bluetooth speaker and microphone as I/O.
