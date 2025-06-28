@@ -80,5 +80,6 @@ Design and 3D print and pan and tilt system for raspberry pi in fusion 360 ->
 - listen to voice based on sensitvity or just record for 10 seconds? (lazy option)
 - tests and fail checks if API doesn't connect?
 - add easter egg if you ask milo to 'drop a beat'
+  
 **Step 7**
 - Conceal Wires and make it look more ‘buddy’ like
