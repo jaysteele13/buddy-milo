@@ -5,6 +5,10 @@ import requests
 import playsound
 import os
 
+local_prefix = "http://127.0.0.1:8000"
+server_prefix = "http://192.168.4.39:8000"
+
+prefix = server_prefix
 
 API_KEY = "pi_is_awesome"
 AUDIO_FILE = "audio.wav"
@@ -29,7 +33,7 @@ def receive_prompt(duration_seconds=7, sample_rate=16000):
 # === Transcribe via /transcribe ===
 def transcribe_audio():
     print("🧠 Transcribing...")
-    url = "http://127.0.0.1:8000/transcribe/"
+    url = f"{prefix}/transcribe/"
     with open(AUDIO_FILE, 'rb') as f:
         response = requests.post(
             url,
@@ -44,7 +48,7 @@ def transcribe_audio():
 # === Process via /personality ===
 def process_personality(sentence):
     print("🧠 Applying personality...")
-    url = "http://127.0.0.1:8000/personality/"
+    url = f"{prefix}/personality/"
     response = requests.post(
         url,
         headers={
@@ -61,7 +65,7 @@ def process_personality(sentence):
 # === Convert via /text2speech ===
 def synthesize_speech(sentence):
     print("🗣 Synthesizing speech...")
-    url = "http://127.0.0.1:8000/text2speech/"
+    url = f"{prefix}/text2speech/"
     response = requests.post(
         url,
         headers={
