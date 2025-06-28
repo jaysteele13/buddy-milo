@@ -1,5 +1,11 @@
 # buddy-milo
-Stationary desk buddy. Programmed to look at people when speaking to them. Using face detection, face recognition, speech recognition, calls to trained complex LLM's with the goal to train the LLM to give it a sarcastic friendly attidude.
+Stationary desk buddy. Programmed to look at people when speaking to them. Using face detection, face recognition, speech recognition, text-to-speech technology and complex LLM's with the goal to experience a fun sarcastic friendly attidude with my robot.
+
+**Additional Features:**
+- NI North Coast surf and weather forecasting
+- Intresting thoughts on milk
+- Drops beats on command
+- Trained on faces and reconises his 'buddies' anyone else are his 'enemies'. Remember that.
 
 # Progress
 
