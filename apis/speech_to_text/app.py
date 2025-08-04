@@ -55,7 +55,7 @@ async def transcribe(file: UploadFile = File(...),
         
 
         if not transcription:
-            raise HTTPException(status_code=404, detail="No speech found")
+            JSONResponse(content={"transcription": 'I do not understand what you just said'})
         
         return JSONResponse(content={"transcription": transcription})
 

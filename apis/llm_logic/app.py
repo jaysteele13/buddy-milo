@@ -27,7 +27,7 @@ async def transcribe(request: PersonalityRequest,
         raise HTTPException(status_code=401, detail="Unauthorized")
 
     if not request.sentence.strip():
-        raise HTTPException(status_code=400, detail="Sentence must be populated")
+        raise HTTPException(status_code=400, detail=f"Sentence must be populated. Sentence: {request.sentence}")
 
     try:
         new_sentence = check_for_main_prompt(request.sentence)

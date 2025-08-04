@@ -1,5 +1,8 @@
 #!/bin/bash
 
+echo "Kill all processes on port 8000"
+kill $(lsof -t -i:8000)
+
 echo "Activating virtual environment..."
 source ~/Documents/environments/milo-env/bin/activate || { echo "Failed to activate venv"; exit 1; }
 
