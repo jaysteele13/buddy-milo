@@ -8,6 +8,7 @@ import pigpio
 import sys
 import asyncio
 import os
+import random
 
 # sudo systemctl start pigpiod more exact for servo
 # sudo systemctl stop pigpiod
@@ -328,7 +329,7 @@ def get_tilt_index(tilt_index, len_of_sequence):
 def map_pwm_to_angle(pwm, pwm_min, pwm_max, angle_min, angle_max):
     return angle_min + ((float(pwm - pwm_min) / (pwm_max - pwm_min)) * (angle_max - angle_min))
 
-
+# 
 def sentry_sweepV3(local_pi, local_cam, step_size=40, delay_between_steps=0.05):
     print('Starting the Mighty Sweep')
     tilt_sequence = [1000, 1200, 1400]
@@ -408,8 +409,37 @@ def sentry_sweepV3(local_pi, local_cam, step_size=40, delay_between_steps=0.05):
 
             
     
+def pick_random_file(dir_path):
+    # List all file names in the given directory
+    files_list = [f for f in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, f))]
     
-# Need to Split up Sentry -> Middle Ground of Face Found -> and Tracking so it can run asynchronously better!
+    if not files_list:
+        return None  # or raise an error if preferred
+    
+    # Randomly pick one file name
+    return f'{dir_path}/{random.choice(files_list)}'
+    
+async def play_output(file_path):
+    print("🎧 Playing response...")
+
+    process = await asyncio.create_subprocess_exec("aplay", file_path)
+    await process.wait()
+
+    print("🎧 Playback finished.")
+    
+async def find_and_greet(dir_path):
+    file_path = pick_random_file(dir_path)
+    
+    if file_path is None:
+        print('Invalid File Path')
+        return
+    await play_output(file_path)
+    
+    
+def face_exists(name):
+    dir_name = 'presets/greetings/'
+    return name in os.listdir(dir_name)
+
 
 async def sentry_sweepV4(local_pi, local_cam, stop_event: asyncio.Event, step_size=40, delay_between_steps=0.05) -> None:
     print('Starting the Mighty Sweep')
@@ -460,9 +490,15 @@ async def sentry_sweepV4(local_pi, local_cam, stop_event: asyncio.Event, step_si
             last_face_seen_time = current_time
 
             # Track face
-            print('Found a Face time for face tracking')
+            # Greeting Check
+            print(f'Here is the name of face: {face_names[0]}')
+            if face_exists(face_names[0]): # and (current_time offset of 5 minutes) -> should this even be done
+                
+                #Name must match greetings dir name
+                dir_path = f'presets/greetings/{face_names[0]}'
+                await find_and_greet(dir_path)
+            
             stop_event.set()
-            # IF face is found must then return the x, y, and pan and tilt enagle with the error starting off as 0, 0
             x, y = draw_results_and_coord(face_locations, face_names)
 
             pan_angle = map_pwm_to_angle(pan_pos, SERVO_PAN_MIN, SERVO_PAN_MAX, PAN_MIN_ANGLE, PAN_MAX_ANGLE)
