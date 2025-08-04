@@ -18,6 +18,7 @@ from picamera2 import Picamera2
 from chatbot.use_brainV3 import transcribe_audio, process_personality, synthesize_speech
 from control_led.blink_led import init_led, enable_led, disable_led, blink_led, LED_RED_PIN, LED_GREEN_PIN
 from face_tracking.track import sentry_sweepV4, sentry_sweepV3, SERVO_TILT_PIN, SERVO_PAN_PIN, track_faceV2, process_frame, draw_results_and_coord
+from control_audio.control_audio import find_and_think
 
 
 local_prefix = "http://127.0.0.1:8000"
@@ -298,6 +299,9 @@ async def main():
     stop_green_blink = asyncio.Event()
     stop_red_blink = asyncio.Event()
     
+    # Async Events for Thinking music
+    stop_thinking_music = asyncio.Event()
+    
      # States for Leds
     # 1. Searching - RED blinking Light
     # 2. Listening - RED static Light
@@ -424,7 +428,15 @@ async def main():
                 face_lost = 0
             
 
-                # --- LED LOGIC 3. THINKING ---
+                # --- THINKING ---
+                # get random file from thinking music and play async - be able to cut it off when thinking is done
+                #
+                stop_thinking_music.clear()
+                stop_thinking_music = asyncio.Event()
+                think_music = asyncio.create_task(find_and_think('presets/thinking', stop_thinking_music))
+#                 
+                
+                # --- LED LOGIC 3.  ---
                 print('stop red led static and start green blink')
                 disable_led(LED_RED_PIN)  # Now using brain -> Green LED
                 stop_green_blink.clear()  # Ensure the blink loop can run
@@ -445,6 +457,8 @@ async def main():
                 # Apply LLM Personality
                 print(f'trying transcribed SENTENCE: [{sentence}]')
                 new_sentence = await asyncio.to_thread(process_personality, sentence)
+                
+                # --- 3. End of Thinking ---
 
                 # Synthesize speech (runs in thread since it's blocking)
                 await asyncio.to_thread(synthesize_speech, new_sentence)
@@ -455,12 +469,16 @@ async def main():
                 print('stop green blink led ')
                 enable_led(LED_GREEN_PIN)  # Solid green during speech
                 print('start green led static')
+                
+                # Stop Thinking Music
+                stop_thinking_music.set()
+                await think_music
+#                 
+              
 
                 # Play the TTS output (non-blocking task)
                 play_task = asyncio.create_task(play_output(TTS_OUTPUT, playing_output, stop_face_tracking))
-              
-
-                # Stop face tracking while speaking
+            
                 
 
                 # Wait until speech is done before listening again
