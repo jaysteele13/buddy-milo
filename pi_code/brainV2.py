@@ -11,6 +11,7 @@ import pigpio
 import audioop
 import threading
 import re
+import random
 import sys
 import RPi.GPIO as gpio
 import asyncio
@@ -172,16 +173,7 @@ def listen_for_prompt():
         print("No speech detected.")
         return '[BLANK]'
     
-    
 
-# Must Create function to clear files created
-
-
-# === Play final output ===
-# async def play_output(file_path):
-#     print("🎧 Playing response...")
-#     # playsound.playsound(file_path, block=True)
-#     await asyncio.create_subprocess_exec("aplay", file_path)
     
 async def play_output_with_face_tracking(file_path, playing_output, stop_face_tracking):
     print("🎧 Playing response...")
@@ -202,7 +194,7 @@ def stopListening(sentence):
     return bool(re.search(r'stop listening', sentence, re.IGNORECASE))
 
 def hasDiscoBiscuits(sentence):
-    return bool(re.search(r'disco biscuits', sentence, re.IGNORECASE))
+    return bool(re.search(r'\b(disco biscuits|disco|biscuits)\b', sentence, re.IGNORECASE))
 
 # === MAIN FLOW ===
 def setup_camera():
@@ -413,9 +405,16 @@ async def main():
                 ))
                 
                 # Buffering Logic Here
+                # -- Either Buffering Logic (65%) or Insult (35%)
                 stop_buffering_music.clear()
                 stop_buffering_music = asyncio.Event()
-                buffer_music = asyncio.create_task(find_and_think('presets/buffering', stop_buffering_music))
+                
+                
+                INSULT_CHANCE = 53  # percent
+                rand = random.randint(1, 100)
+
+                preset = 'presets/insults' if rand <= INSULT_CHANCE else 'presets/buffering'
+                buffer_music = asyncio.create_task(find_and_think(preset, stop_buffering_music))
                 
                 sentence = await asyncio.to_thread(transcribe_audio, filename)
                 stop_green_blink.set()
