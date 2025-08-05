@@ -18,7 +18,7 @@ from picamera2 import Picamera2
 from chatbot.use_brainV3 import transcribe_audio, process_personality, synthesize_speech
 from control_led.blink_led import init_led, enable_led, disable_led, blink_led, LED_RED_PIN, LED_GREEN_PIN
 from face_tracking.track import sentry_sweepV4, sentry_sweepV3, SERVO_TILT_PIN, SERVO_PAN_PIN, track_faceV2, process_frame, draw_results_and_coord
-from control_audio.control_audio import find_and_think
+from control_audio.control_audio import find_and_think, play_output_blocking
 
 
 local_prefix = "http://127.0.0.1:8000"
@@ -183,7 +183,7 @@ def listen_for_prompt():
 #     # playsound.playsound(file_path, block=True)
 #     await asyncio.create_subprocess_exec("aplay", file_path)
     
-async def play_output(file_path, playing_output, stop_face_tracking):
+async def play_output_with_face_tracking(file_path, playing_output, stop_face_tracking):
     print("🎧 Playing response...")
     playing_output.set()  # Playback has started
 
@@ -200,6 +200,9 @@ def hasSquareOrBracket(sentence):
 
 def stopListening(sentence):
     return bool(re.search(r'stop listening', sentence, re.IGNORECASE))
+
+def hasDiscoBiscuits(sentence):
+    return bool(re.search(r'disco biscuits', sentence, re.IGNORECASE))
 
 # === MAIN FLOW ===
 def setup_camera():
@@ -427,12 +430,18 @@ async def main():
                 # Break from Listening Loop
                 break
             
-            # Inaudible Audio Cancel
+            # Determine Easter eggs and Early Cancels
             if hasSquareOrBracket(sentence) or (sentence is None) or (sentence == ''):
                 # os.system('cls' if os.name == 'nt' else 'clear')
                 print(f'inaudible stop brain function - Removing that file {filename}')
                 # await erase_recordings()
                 # Stop Green Blinking Event
+            elif hasDiscoBiscuits(sentence):
+                # play output without async determiner
+                enable_led(LED_GREEN_PIN)  # Solid green during speech
+                await play_output_blocking('presets/easter_eggs/disco_biscuits.wav')
+                disable_led(LED_GREEN_PIN)  # Solid green during speech
+                                                
                 
             else: # Time to Process with Brain
                 # Face Lost will probably be found reset face found counter
@@ -440,7 +449,7 @@ async def main():
             
 
                 # --- THINKING ---
-                # get random file from thinking music and play async - be able to cut it off when thinking is done
+                # This Will either Randomly insult the person or play thinking music! Randomiser Again
                 #
                 stop_thinking_music.clear()
                 stop_thinking_music = asyncio.Event()
@@ -488,7 +497,7 @@ async def main():
               
 
                 # Play the TTS output (non-blocking task)
-                play_task = asyncio.create_task(play_output(TTS_OUTPUT, playing_output, stop_face_tracking))
+                play_task = asyncio.create_task(play_output_with_face_tracking(TTS_OUTPUT, playing_output, stop_face_tracking))
             
                 
 

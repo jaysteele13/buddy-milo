@@ -35,6 +35,14 @@ async def play_output(file_path, stop_event):
 
     print("🎧 Playback finished.")
     
+    
+async def play_output_blocking(file_path):
+    print("🎧 Playing response...")
+
+    process = await asyncio.create_subprocess_exec("aplay", file_path)
+    await process.wait()
+    print("🎧 Playback finished.")
+    
 async def find_and_think(dir_path, stop_event):
     file_path = pick_random_file(dir_path)
     
