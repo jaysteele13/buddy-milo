@@ -301,6 +301,7 @@ async def main():
     
     # Async Events for Thinking music
     stop_thinking_music = asyncio.Event()
+    stop_buffering_music = asyncio.Event()
     
      # States for Leds
     # 1. Searching - RED blinking Light
@@ -407,9 +408,19 @@ async def main():
                     blink_interval_ms=500,
                     stop_event=stop_green_blink
                 ))
+                
+                # Buffering Logic Here
+                stop_buffering_music.clear()
+                stop_buffering_music = asyncio.Event()
+                buffer_music = asyncio.create_task(find_and_think('presets/buffering', stop_buffering_music))
+                
                 sentence = await asyncio.to_thread(transcribe_audio, filename)
                 stop_green_blink.set()
                 await green_blinker
+                
+                # Stop buffering music
+                stop_buffering_music.set()
+                await buffer_music
                 
             
             if stopListening(sentence):
