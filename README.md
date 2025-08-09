@@ -81,13 +81,16 @@ Design and 3D print and pan and tilt system for raspberry pi in fusion 360 ->
 - Has rechargeable battery for device
 
 **Step 6** (Currently Doing)
-- Connect Server in network to milo
-- properly configure how milo will interact with recognised and non recognised people
-- configure LEDs green when talking red when on standby, blue when listening
-- should he be triggered by a wake word. If person in frame grab audio and look for wake word using endpoint and regex?
-- listen to voice based on sensitvity or just record for 10 seconds? (lazy option)
-- tests and fail checks if API doesn't connect?
-- add easter egg if you ask milo to 'drop a beat'
+- Connect Server in network to milo (done)
+- properly configure how milo will interact with recognised and non recognised people (done)
+- configure LEDs green when talking red when on standby, blue when listening (done)
+- should he be triggered by a wake word. If person in frame grab audio and look for wake word using endpoint and regex? (no wake word - button to deactivate sentry)
+- listen to voice based on sensitvity or just record for listen for voice every 3 seconds. per sentry erase recordings. (done)
+- tests and fail checks if API doesn't connect? (eh kinda - done with salt)
+- add easter egg if you ask milo to 'drop a beat' (in progress with beats made by me)
+- add easter egg to dance
   
 **Step 7**
+- make 3D printed design for milo on Fusion360
+-
 - Conceal Wires and make it look more ‘buddy’ like
