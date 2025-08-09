@@ -3,9 +3,11 @@ Stationary desk buddy. Programmed to look at people when speaking to them. Using
 
 **Additional Features:**
 - NI North Coast surf and weather forecasting
-- Intresting thoughts on milk
-- Drops beats on command
-- Trained on faces and reconises his 'buddies' anyone else are his 'enemies'. Remember that.
+- Drops Beats on Command
+- Other fun easter eggs
+- Silly nonesence sarcastic personaility
+- Randomly insults you
+- Recognises me. Anyone else is an enemy
 
 # Progress
 
