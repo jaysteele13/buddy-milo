@@ -1,7 +1,7 @@
 # what i have learned?
 
 - creating a private server
-- training a small llm on a small dataset
+- training llm on dataset
 - model quantisation 
 - google cloud api pipeline
 - fusion 360 3D skills + designing full product
