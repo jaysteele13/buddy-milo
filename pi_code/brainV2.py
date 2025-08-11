@@ -13,13 +13,15 @@ import threading
 import re
 import random
 import sys
+import jellyfish
 import RPi.GPIO as gpio
 import asyncio
 from picamera2 import Picamera2
 from chatbot.use_brainV3 import transcribe_audio, process_personality, synthesize_speech
 from control_led.blink_led import init_led, enable_led, disable_led, blink_led, LED_RED_PIN, LED_GREEN_PIN
 from face_tracking.track import sentry_sweepV4, sentry_sweepV3, SERVO_TILT_PIN, SERVO_PAN_PIN, track_faceV2, process_frame, draw_results_and_coord
-from control_audio.control_audio import find_and_think, play_output_blocking
+from control_audio.control_audio import find_and_think, play_output_blocking, pick_random_file, play_output
+from control_servos.controlV2 import dance
 
 
 local_prefix = "http://127.0.0.1:8000"
@@ -34,7 +36,7 @@ TTS_OUTPUT = "myOutput.wav"
 
 
 # Microphone Configuration Variables
-THRESHOLD = 500    # Depends on Mic Sensitivity for 'silence'
+THRESHOLD = 480    # Depends on Mic Sensitivity for 'silence'
 SILENCE_DURATION = 3
 CHUNK = 1024 # Buffer Size
 FORMAT = pyaudio.paInt16 # 16 bit wave
@@ -196,6 +198,15 @@ def stopListening(sentence):
 def hasDiscoBiscuits(sentence):
     return bool(re.search(r'\b(disco biscuits|disco|biscuits)\b', sentence, re.IGNORECASE))
 
+def hasDropBeat(sentence):
+    return bool(re.search(r'\b(drop a beat|give me a beat|a beat|the beat|the bit)\b', sentence, re.IGNORECASE))
+
+def hasDance(sentence):
+    return bool(re.search(r'\b(boogie|dance|jiggy|slice the kebab|groovy)\b', sentence, re.IGNORECASE))
+
+# CREATE FUNCTION TO SAY SERVER ISN@T TURNED ON!
+
+
 # === MAIN FLOW ===
 def setup_camera():
     try:
@@ -298,6 +309,8 @@ async def main():
     stop_thinking_music = asyncio.Event()
     stop_buffering_music = asyncio.Event()
     
+    stop_easter_egg = asyncio.Event()
+    
      # States for Leds
     # 1. Searching - RED blinking Light
     # 2. Listening - RED static Light
@@ -344,10 +357,11 @@ async def main():
     
     # Face Lost threshold
     face_lost = 0
-    face_lost_threshold = 2
+    face_lost_threshold = 3
     
     # Chatbot variables
     sentence = None
+    activation_word = 'milo'
     
    
    
@@ -429,7 +443,7 @@ async def main():
                 # Break from Listening Loop
                 break
             
-            # Determine Easter eggs and Early Cancels
+            # Determine Easter eggs and Early Cancels!
             if hasSquareOrBracket(sentence) or (sentence is None) or (sentence == ''):
                 # os.system('cls' if os.name == 'nt' else 'clear')
                 print(f'inaudible stop brain function - Removing that file {filename}')
@@ -440,7 +454,50 @@ async def main():
                 enable_led(LED_GREEN_PIN)  # Solid green during speech
                 await play_output_blocking('presets/easter_eggs/disco_biscuits.wav')
                 disable_led(LED_GREEN_PIN)  # Solid green during speech
-                                                
+            elif hasDropBeat(sentence):
+                # -- CONTINUE HERE REUSE BUFFER MUSIC FOR CLARITY? MAKE GENRIC EASTER EGG EVENT?? -
+                enable_led(LED_GREEN_PIN)
+                # play random file from easter_eggs/beats with face tracking!
+                if face_tracking_task is None or face_tracking_task.done():
+                    stop_face_tracking.clear()  # Ensure it can run again
+                    face_tracking_task = asyncio.create_task(
+                        face_tracking(pi, picam2, stop_face_tracking, pan_angle, tilt_angle)
+                    )
+                    
+                
+                # give easter/beat file for this
+                random_beat_file = pick_random_file('presets/easter_eggs/beats')
+                play_egg = asyncio.create_task(play_output_with_face_tracking(random_beat_file, playing_output, stop_face_tracking))
+            
+                
+
+                # Wait until speech is done before listening again
+                await play_egg
+                if playing_output.is_set():
+                    print("⏳ Waiting for playback to finish...")
+                    await playing_output.wait()
+                    
+                
+                
+                disable_led(LED_GREEN_PIN)
+            elif hasDance(sentence):
+                # ALMOST WORKS BUT DOESNT CANCEL AUDIO!
+                playing_output.clear()
+                enable_led(LED_GREEN_PIN)
+                random_song_file = pick_random_file('presets/easter_eggs/songs')
+                play_egg = asyncio.create_task(play_output(random_song_file, playing_output))
+                dance_task = asyncio.create_task(dance(pi))
+
+                await dance_task  # Wait for dance to finish 20-30 second dance
+
+                # After dance ends, cancel/stop playback
+                print('cancel music')
+                playing_output.set()
+                await play_egg
+
+                disable_led(LED_GREEN_PIN)
+                              
+            
                 
             else: # Time to Process with Brain
                 # Face Lost will probably be found reset face found counter
@@ -475,6 +532,7 @@ async def main():
 
                 # Apply LLM Personality
                 print(f'trying transcribed SENTENCE: [{sentence}]')
+                # Remove Activation word from sentence
                 new_sentence = await asyncio.to_thread(process_personality, sentence)
                 
                 # --- 3. End of Thinking ---
@@ -508,13 +566,7 @@ async def main():
                 disable_led(LED_GREEN_PIN)  # Turn off once speech starts
             
                     
-                
-
-#           if red_blinker.done():
-#                         stop_blink = asyncio.Event()
-#                         red_blink_task = asyncio.create_task(blink_led(LED_RED_PIN, 500, stop_blink))
-          
-#           
+                    
      
               
           if return_to_sentry:
