@@ -1,10 +1,12 @@
 import requests
 
+
 server_prefix = "http://192.168.4.39:8000"
 
 prefix = server_prefix
 
 API_KEY = "pi_is_awesome"
+
 
 def synthesize_speech(sentence, name):
     print("🗣 Synthesizing speech...")
@@ -25,10 +27,15 @@ def synthesize_speech(sentence, name):
     else:
         raise Exception(f"Failed TTS: {response.text}")
     
+    
+    
+
 
 if __name__ == "__main__":
-    sentence = "target ackwired"
-    name = 'robo-greet2.wav'
+    sentence = "no sweat mate let me think here one sec"
+    name = '../presets/insults/robo-insult5.wav'
     
     synthesize_speech(sentence, name)
+
+
     

@@ -26,7 +26,7 @@ def safe_set_servo(pi, pin, value):
 # Make a function to convert degree of where face is to pwm freq
 
 async def dance(pi):
-    pan_start_sequence = [600, 1200, 1000, 800, 600]
+    pan_start_sequence = [600, 1200, 1000, 800, 600, 1000, 800]
     headbang_tilts = [(1000, 1200), (1200, 1000)] * 2
 
     tilt_drop = 600

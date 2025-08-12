@@ -481,6 +481,7 @@ async def sentry_sweepV4(local_pi, local_cam, stop_event: asyncio.Event, step_si
 
         
         # Capture and process frame
+        face_names = []
         frame = await asyncio.to_thread(local_cam.capture_array)
         processed_frame, face_locations, face_names = await asyncio.to_thread(process_frame, frame)
         
