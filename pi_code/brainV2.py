@@ -17,7 +17,7 @@ import jellyfish
 import RPi.GPIO as gpio
 import asyncio
 from picamera2 import Picamera2
-from chatbot.use_brainV3 import transcribe_audio, process_personality, synthesize_speech
+from chatbot.use_brainV3 import transcribe_audio, process_personality, synthesize_speech, SERVER_NOT_ON, SERVER_ERROR
 from control_led.blink_led import init_led, enable_led, disable_led, blink_led, LED_RED_PIN, LED_GREEN_PIN
 from face_tracking.track import sentry_sweepV4, sentry_sweepV3, SERVO_TILT_PIN, SERVO_PAN_PIN, track_faceV2, process_frame, draw_results_and_coord
 from control_audio.control_audio import find_and_think, pick_random_file, play_audio, play_output_blocking
@@ -50,11 +50,17 @@ has_voice_activity = False
 
 async def erase_recordings(filename='recording*'):
     recording_dir = 'chatbot/recordings'
+    
+    # Ensure the recordings directory exists
+    os.makedirs(recording_dir, exist_ok=True)
+
     place_of_recordings = f"{recording_dir}/{filename}"
     command = f"rm {place_of_recordings}"
     
-    
-    file_count = len([name for name in os.listdir(recording_dir) if os.path.isfile(os.path.join(recording_dir, name))])
+    file_count = len([
+        name for name in os.listdir(recording_dir) 
+        if os.path.isfile(os.path.join(recording_dir, name))
+    ])
     
     if file_count > 0:
         process = await asyncio.create_subprocess_shell(command)
@@ -485,12 +491,19 @@ async def main():
             # Take through Activation Logic first
             miloRequested, word_found, sentence = hasMilo(sentence)
             print(f'Activation word found?: {word_found}')
+            
+            # Error checks
+            if sentence == SERVER_NOT_ON:
+                await play_audio('presets/error/server_not_on.wav', kill_event=kill_event)
+            elif sentence == SERVER_ERROR:
+                await play_audio('presets/error/server_error.wav', kill_event=kill_event)
+                
 
             
-            if miloRequested and not wasRude:
+            elif miloRequested and not wasRude:
             # Determine Easter eggs and Early Cancels!
                 if hasSquareOrBracket(sentence) or (sentence is None) or (sentence == ''):
-                    # os.system('cls' if os.name == 'nt' else 'clear')
+  
                     print(f'inaudible stop brain function - Removing that file {filename}')
 
                 elif hasDiscoBiscuits(sentence):
@@ -629,6 +642,7 @@ async def main():
           if return_to_sentry:
             print(f"Lost face for {attention_span} seconds, resuming sweep.")
             face_found_event.clear()
+            await erase_recordings()
             
             # Stage 1. Searching -LED LOGIC -
             face_lost = 0

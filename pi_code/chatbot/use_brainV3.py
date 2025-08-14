@@ -12,20 +12,6 @@ import threading
 import re
 
 
-# Code now works, must make I/O device compatible, then we can start doing camera looking.
-
-# After camera looking we can start doing LEDs Simultaneously with main brain and functioning
-
-
-# Next we must get the camera working and introduce threading so Milo Knows who he is talking to whilst
-# communicating
-
-# Get servos tuned properly
-
-# introduce lights
-
-# introduce other features like drop a beat, buzzer when thinking, array of 50 phrases that could be
-#said about funny topics to give the illusion of greater intelligence
 
 local_prefix = "http://127.0.0.1:8000"
 server_prefix = "http://192.168.4.39:8000"
@@ -35,6 +21,9 @@ prefix = server_prefix
 API_KEY = "pi_is_awesome"
 AUDIO_FILE = "audio.wav"
 TTS_OUTPUT = "myOutput.wav"
+
+SERVER_NOT_ON = '[SERVER_NOT_ON]'
+SERVER_ERROR = '[SERVER_ERROR]'
 
 
 
@@ -168,11 +157,11 @@ def transcribe_audio(audio_file = AUDIO_FILE):
             print("⚠️  400 Bad Request — Likely an invalid or corrupted audio file.")
         else:
             print(f"HTTP error occurred: {http_err} ({response.status_code})")
-        return "[BLANK]"
+        return "[SERVER_EEROR]"
 
     except Exception as e:
         print(f"❌ Unexpected error during transcription: {e}")
-        return "[BLANK]"
+        return "[SERVER_NOT_ON]"
 
 
 # === Process via /personality ===

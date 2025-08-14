@@ -32,8 +32,8 @@ def synthesize_speech(sentence, name):
 
 
 if __name__ == "__main__":
-    sentence = "no sweat mate let me think here one sec"
-    name = '../presets/insults/robo-insult5.wav'
+    sentence = "Generic Server Error"
+    name = '../presets/error/server_error.wav'
     
     synthesize_speech(sentence, name)
 

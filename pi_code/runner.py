@@ -52,6 +52,11 @@ async def main():
 
     PIGPIOD = 'pigpiod.service'
     MILO = 'milo_brain.service'
+    
+    music_prefix = '/home/jay/Documents/projects/buddy-milo/pi_code/presets/power/'
+    on_music = f'{music_prefix}on.wav'
+    off_music = f'{music_prefix}off.wav'
+    await play_output_blocking(on_music)
 
     try:
         while True:
@@ -72,13 +77,13 @@ async def main():
                 print("Stopping Milo service...")
                 
                 stop_service(MILO)
-                await play_output_blocking('presets/power/off.wav')
+                await play_output_blocking(off_music)
                 turn_off_leds()
                 
             else:
                 print("Starting Milo service...")
                 start_service(MILO)
-                await play_output_blocking('presets/power/on.wav')
+                await play_output_blocking(on_music)
 
     finally:
         pi.stop()
