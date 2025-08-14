@@ -440,7 +440,6 @@ def face_exists(name):
     dir_name = 'presets/greetings/'
     return name in os.listdir(dir_name)
 
-
 async def sentry_sweepV4(local_pi, local_cam, stop_event: asyncio.Event, step_size=40, delay_between_steps=0.05) -> None:
     print('Starting the Mighty Sweep')
     await asyncio.sleep(0.1)
@@ -463,6 +462,7 @@ async def sentry_sweepV4(local_pi, local_cam, stop_event: asyncio.Event, step_si
     first_time_tracking = True
     while not stop_event.is_set(): # was
         current_time = time.monotonic()
+  
 
         # Sweep mode
         if last_face_seen_time is None:

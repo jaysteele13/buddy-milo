@@ -20,9 +20,10 @@ from picamera2 import Picamera2
 from chatbot.use_brainV3 import transcribe_audio, process_personality, synthesize_speech
 from control_led.blink_led import init_led, enable_led, disable_led, blink_led, LED_RED_PIN, LED_GREEN_PIN
 from face_tracking.track import sentry_sweepV4, sentry_sweepV3, SERVO_TILT_PIN, SERVO_PAN_PIN, track_faceV2, process_frame, draw_results_and_coord
-from control_audio.control_audio import find_and_think, play_output_blocking, pick_random_file, play_output
+from control_audio.control_audio import find_and_think, pick_random_file, play_audio
 from control_servos.controlV2 import dance
 from activation_word.activation import hasMilo
+from control_button.button import kill_switch_watcher
 
 
 local_prefix = "http://127.0.0.1:8000"
@@ -119,7 +120,7 @@ def listen_for_prompt():
     discarding = True
 
     while True:
-        
+        # must check for kill frame for button
         # Skip initial noisy frames
         if discarding:
             if time.time() - discard_start_time < INITIAL_DISCARD_DURATION:
@@ -200,7 +201,7 @@ def hasDiscoBiscuits(sentence):
     return bool(re.search(r'\b(disco biscuits|disco|biscuits)\b', sentence, re.IGNORECASE))
 
 def hasDropBeat(sentence):
-    return bool(re.search(r'\b(drop a beat|give me a beat|a beat|the beat|the bit)\b', sentence, re.IGNORECASE))
+    return bool(re.search(r'\b(drop a beat|give me a beat|a beat|the beat|the bit|drop, beat|beat)\b', sentence, re.IGNORECASE))
 
 def hasDance(sentence):
     return bool(re.search(r'\b(boogie|dance|jiggy|slice the kebab|groovy)\b', sentence, re.IGNORECASE))
@@ -290,6 +291,7 @@ async def main():
     # Clear Screen
     # os.system('cls' if os.name == 'nt' else 'clear')
     
+    
     # Init Camera
     picam2 = await asyncio.to_thread(setup_camera)
     
@@ -301,6 +303,11 @@ async def main():
     # Global Time Managment
     last_face_seen_time = None
     
+    # Async Event for Killing Music based off of button
+    kill_event = asyncio.Event()
+    
+    # Init kill Switch
+    asyncio.create_task(kill_switch_watcher(kill_event))
     
     # Async Events for LED Control
     stop_green_blink = asyncio.Event()
@@ -434,7 +441,7 @@ async def main():
                 INSULT_CHANCE = 33  # percent
                 RUDE_CHANCE = 10
                 BUFFERING_CHANCE = 50
-                SILENCE_CHANCE = 50
+                SILENCE_CHANCE = 60
                 
                 silence_key = 'silence'
                 
@@ -452,7 +459,7 @@ async def main():
                 )[0]
 
                 if not (preset == silence_key):
-                    buffer_music = asyncio.create_task(find_and_think(preset, stop_buffering_music))
+                    buffer_music = asyncio.create_task(find_and_think(preset, stop_buffering_music, kill_event))
                 
                     sentence = await asyncio.to_thread(transcribe_audio, filename)
                     stop_green_blink.set()
@@ -476,6 +483,7 @@ async def main():
             # Take through Activation Logic first
             miloRequested, word_found, sentence = hasMilo(sentence)
             print(f'Activation word found?: {word_found}')
+
             
             if miloRequested and not wasRude:
             # Determine Easter eggs and Early Cancels!
@@ -486,7 +494,8 @@ async def main():
                 elif hasDiscoBiscuits(sentence):
                     # play output without async determiner
                     enable_led(LED_GREEN_PIN)  # Solid green during speech
-                    await play_output_blocking('presets/easter_eggs/disco_biscuits.wav')
+                    # await play_output_blocking('presets/easter_eggs/disco_biscuits.wav')
+                    await play_audio('presets/easter_eggs/disco_biscuits.wav', kill_event=kill_event)
                     disable_led(LED_GREEN_PIN)  # Solid green during speech
                 elif hasDropBeat(sentence):
                     # -- CONTINUE HERE REUSE BUFFER MUSIC FOR CLARITY? MAKE GENRIC EASTER EGG EVENT?? -
@@ -501,9 +510,9 @@ async def main():
                     
                     # give easter/beat file for this
                     random_beat_file = pick_random_file('presets/easter_eggs/beats')
-                    play_egg = asyncio.create_task(play_output_with_face_tracking(random_beat_file, playing_output, stop_face_tracking))
-                
-                    
+                    # play_egg = asyncio.create_task(play_output_with_face_tracking(random_beat_file, playing_output, stop_face_tracking))
+                 
+                    play_egg = asyncio.create_task(play_audio(random_beat_file, playing_output=playing_output, stop_face_tracking=stop_face_tracking, kill_event=kill_event))
 
                     # Wait until speech is done before listening again
                     await play_egg
@@ -519,7 +528,8 @@ async def main():
                     playing_output.clear()
                     enable_led(LED_GREEN_PIN)
                     random_song_file = pick_random_file('presets/easter_eggs/songs')
-                    play_egg = asyncio.create_task(play_output(random_song_file, playing_output))
+                     
+                    play_egg = asyncio.create_task(play_audio(random_song_file, stop_event=playing_output, kill_event=kill_event))
                     dance_task = asyncio.create_task(dance(pi))
 
                     await dance_task  # Wait for dance to finish 20-30 second dance
@@ -547,7 +557,7 @@ async def main():
                     #
                     stop_thinking_music.clear()
                     stop_thinking_music = asyncio.Event()
-                    think_music = asyncio.create_task(find_and_think('presets/thinking', stop_thinking_music))
+                    think_music = asyncio.create_task(find_and_think('presets/thinking', stop_thinking_music, kill_event))
     #                 
                     
                     # --- LED LOGIC 3.  ---
@@ -592,7 +602,8 @@ async def main():
                   
 
                     # Play the TTS output (non-blocking task)
-                    play_task = asyncio.create_task(play_output_with_face_tracking(TTS_OUTPUT, playing_output, stop_face_tracking))
+                    play_task = asyncio.create_task(play_audio(TTS_OUTPUT, playing_output=playing_output, stop_face_tracking=stop_face_tracking, kill_event=kill_event))
+                    # play_task = asyncio.create_task(play_output_with_face_tracking(TTS_OUTPUT, playing_output, stop_face_tracking))
                 
                     
 
@@ -644,6 +655,8 @@ if __name__ == "__main__":
         init_led()
         
         asyncio.run(main())
+    except asyncio.CancelledError:
+        print("Main loop cancelled.")
     finally:
         print('Cleaning Up LED')
         gpio.cleanup()
