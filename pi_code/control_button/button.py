@@ -6,12 +6,12 @@ import asyncio
 # Define the GPIO pin connected to the button
 BUTTON_PIN = 16
 
-# Set the GPIO mode to BCM
-GPIO.setmode(GPIO.BCM)
+
 
 # Initialize the pushbutton pin as an input with a pull-up resistor
 # The pull-up input pin will be HIGH when the switch is open and LOW when the switch is closed.
-GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+def initButton():
+    GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 # isButtonPressed
 def isButtonPressed():
@@ -25,9 +25,9 @@ async def play_output_blocking(file_path):
     print("🎧 Playback finished.")
 
 # Must create an audio stop_event
-async def kill_switch_watcher(kill_event):
+async def kill_switch_watcher(kill_event, pi):
     while True:
-        if GPIO.input(BUTTON_PIN) == GPIO.LOW:
+        if pi.read(BUTTON_PIN) == 1:  
             print("Kill switch pressed! Shutting down...")
             # Cancel all tasks except this one
             kill_event.set()

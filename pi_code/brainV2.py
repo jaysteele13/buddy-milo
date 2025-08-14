@@ -20,10 +20,10 @@ from picamera2 import Picamera2
 from chatbot.use_brainV3 import transcribe_audio, process_personality, synthesize_speech
 from control_led.blink_led import init_led, enable_led, disable_led, blink_led, LED_RED_PIN, LED_GREEN_PIN
 from face_tracking.track import sentry_sweepV4, sentry_sweepV3, SERVO_TILT_PIN, SERVO_PAN_PIN, track_faceV2, process_frame, draw_results_and_coord
-from control_audio.control_audio import find_and_think, pick_random_file, play_audio
+from control_audio.control_audio import find_and_think, pick_random_file, play_audio, play_output_blocking
 from control_servos.controlV2 import dance
 from activation_word.activation import hasMilo
-from control_button.button import kill_switch_watcher
+from control_button.button import kill_switch_watcher, initButton
 
 
 local_prefix = "http://127.0.0.1:8000"
@@ -306,8 +306,7 @@ async def main():
     # Async Event for Killing Music based off of button
     kill_event = asyncio.Event()
     
-    # Init kill Switch
-    asyncio.create_task(kill_switch_watcher(kill_event))
+    
     
     # Async Events for LED Control
     stop_green_blink = asyncio.Event()
@@ -343,6 +342,9 @@ async def main():
     
     if not pi.connected:
         raise RuntimeError("Failed to connect to pigpio daemon")
+    
+    # Init kill Switch
+    # asyncio.create_task(kill_switch_watcher(kill_event, pi))
     
     
     
@@ -640,6 +642,7 @@ async def main():
     finally:
         # Clean Up Crew
         print('Cleaning Up Servo and Camera')
+        
         pi.set_servo_pulsewidth(SERVO_TILT_PIN, 0)
         pi.set_servo_pulsewidth(SERVO_PAN_PIN, 0)
         pi.stop()
@@ -653,12 +656,15 @@ if __name__ == "__main__":
     try:
         # Init LED outside of Async Loop
         init_led()
+        # init_button() # Dont init button happening in runner guarenteed.
         
         asyncio.run(main())
     except asyncio.CancelledError:
         print("Main loop cancelled.")
     finally:
         print('Cleaning Up LED')
+        disable_led(LED_RED_PIN)
+        disable_led(LED_GREEN_PIN)
         gpio.cleanup()
         
 
