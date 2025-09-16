@@ -9,9 +9,10 @@
 - whisper model (audio to text)
 - komoto model (text to audio)
 - facial recognition and detection using pickle encodings
-- pigpiod library for appropriate frequencies for servos
+- pigpiod library for appropriate frequencies for servos. (Frequency and limit control with motors)
 - asynchronous pipeline within rasberry pi
-- music production with _ardour_
+- soldering ability
+- music production with _ardour_ (dropping a 'beat' command plays music I created alongside making milo)
 - video editing for trailer (utilising _kdenlive_)
 
 
@@ -64,3 +65,57 @@ I have also prototyped the robot using old parts and hardware. (Like using old w
 I am at a stage where the robot is functional utilising server endpoints as well as custom logic like dancing, and playing some of my discography on command. The robot also now has a standby feature, so when the pi is plugged in, the robots 'sentience' can be activated by the button.
 
 The next step is to create a sleaker design for the robots body using fusion360.
+
+**17/09/2025**
+
+*Log Post Project Completion.* 
+I have since worked on some software quirks. Updated the speaker to be more sleak and is better quality. Have made edited the crontab to run program on start up. Have made a button listener so program can be turned on standby by button. Also can be safely switched off when held down. The Body parts were printed, I had originally wanted all the body parts to be 3D printed PLA. However due to the limit of my mates filament in his 3D printer I decided to cut the 2 base parts out of left around chipboard. Just painted and sanded them to a decent finish.
+
+Purchased Soldering Equipment. And with extreme willpower managed to solder all the wires together in a way where the solder joints didn't break. If I was to do this again. I would have made a simple and designed a PCB board rather than manually soldering each component on the solderable breadboard. I would have also attempted to make the LEDs, buttons and servos on pins, making them easier to use and modular.
+
+All in all I would say this project was a great sucess considering how new I am to soldering and electronics and hope this experience will allow me to persue other exciting projects.
+
+---
+
+## The steps that were followed:
+
+### Other Steps
+
+**Step One**
+1. Plan initial architechure for bot project
+2. Order in SG90 Servos
+
+**Step Two** 
+Design and 3D print and pan and tilt system for raspberry pi in fusion 360 ->
+1. Is it possible to make a case for raspberry pi as well as pan and tilt system so CPU gets adequate cooling
+2. Looks ok and pan and tilt isn’t top heavy
+3. Have additional power source to power Servos
+
+**Step Three**
+- Begin looking up how LLM and Speech recognition work on a raspberry pi
+- Start by talking to raspberry pi through microphone and getting input
+- From their start playing with speakers and output
+
+**Step 4** 
+- Either train and use another llm or attempt to make one then host it on free tier amazon cloud service. 
+- This must be done through API as it is too powerful for raspberry PI. 
+- Wait times may be weird but worth it?
+
+**Step 5** (Now not out of scope but - focusing on core logic and getting to work)
+- Experiment with Raspberry PI connecting to internet without direct ethernet
+- Has rechargeable battery for device
+
+**Step 6** 
+- Connect Server in network to milo 
+- properly configure how milo will interact with recognised and non recognised people 
+- configure LEDs green when talking red when on standby, blue when listening 
+- should he be triggered by a wake word. If person in frame grab audio and look for wake word using endpoint and regex?
+- listen to voice based on sensitvity or just record for listen for voice every 3 seconds. per sentry erase recordings. 
+- tests and fail checks if API doesn't connect? 
+- add easter egg if you ask milo to 'drop a beat' 
+- add easter egg to dance 
+  
+**Step 7** (Currently Doing)
+- make 3D printed design for milo on Fusion360
+- Make trailer using kdenlive
+- Conceal Wires and make it look more ‘buddy’ like
