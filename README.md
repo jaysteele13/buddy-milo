@@ -1,5 +1,5 @@
 # buddy-milo
-Hi there, I'm milo. Can you spell that punk. 'm i l o' 
+Hi there, I'm milo. Can you spell that punk. _'m i l o' _
 ![WhatsApp Image 2025-09-15 at 17 39 52](https://github.com/user-attachments/assets/b318acba-7246-4698-972f-bd60a7e8e5ff)
 
 A Stationary desk buddy. Programmed to look at people when speaking to them. Using face detection, face recognition, speech recognition, text-to-speech technology and complex LLM's with the goal to experience a fun sarcastic friendly attidude with my robot.
