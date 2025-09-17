@@ -92,6 +92,9 @@ async def main():
     on_music = f'{music_prefix}on.wav'
     off_music = f'{music_prefix}off.wav'
     shutdown_music = f'{music_prefix}shutdown.wav'
+    
+    # start service
+    start_service(MILO)
     await play_output_blocking(on_music)
 
     try:

@@ -24,7 +24,7 @@ from control_audio.control_audio import find_and_think, pick_random_file, play_a
 from control_servos.controlV2 import dance
 from activation_word.activation import hasMilo
 from control_button.button import kill_switch_watcher, initButton
-
+from scipy.signal import butter, lfilter
 
 local_prefix = "http://127.0.0.1:8000"
 server_prefix = "http://192.168.4.39:8000"
@@ -38,15 +38,17 @@ TTS_OUTPUT = "myOutput.wav"
 
 
 # Microphone Configuration Variables
-THRESHOLD = 480    # Depends on Mic Sensitivity for 'silence'
+THRESHOLD = 605    # Depends on Mic Sensitivity for 'silence'
 SILENCE_DURATION = 3
 CHUNK = 1024 # Buffer Size
-FORMAT = pyaudio.paInt16 # 16 bit wave
-CHANNELS = 2
-RATE = 16000
+FORMAT = 'int16'  
+CHANNELS = 1
+RATE = 44100
 SECONDS_BEFORE_RECORDING = 5
 stop_recording = False # global flag yo
 has_voice_activity = False
+DEVICE = "hw:3,0"    # ALSA hardware device (same as arecord)
+AUDIO_DIR = "chatbot/recordings/"
 
 async def erase_recordings(filename='recording*'):
     recording_dir = 'chatbot/recordings'
@@ -68,21 +70,13 @@ async def erase_recordings(filename='recording*'):
     else:
         return
 
-    
 
-def receive_prompt(duration_seconds=5, sample_rate=16000):
-    print(f"🎤 Recording for {duration_seconds} seconds...")
-
-    recording = sd.rec(
-        int(duration_seconds * sample_rate),
-        samplerate=sample_rate,
-        channels=1,
-        dtype='int16'
-    )
-    sd.wait()  # Wait for recording to finish
-    
-    wav.write(AUDIO_FILE, sample_rate, recording)
-    print(f"✅ Audio saved to {AUDIO_FILE}")
+# remove fan noise
+def highpass_filter(data, cutoff=300, fs=44100, order=5):
+    nyq = 0.5 * fs
+    normal_cutoff = cutoff / nyq
+    b, a = butter(order, normal_cutoff, btype='high', analog=False)
+    return lfilter(b, a, data)
 
 def is_silent(data): 
     rms = audioop.rms(data, 2) # two bytes per sample
@@ -93,96 +87,80 @@ def generate_name():
     return f"recording_{timestamp}.wav"
 
 def listen_for_prompt():
-    
-    # Dirty Global Variables
-    global stop_recording
     stop_recording = False
-    
-    global has_voice_activity
     has_voice_activity = False
-    
-    # Config for Microphone
-    audio = pyaudio.PyAudio()
-    for i in range(audio.get_device_count()):
-        info = audio.get_device_info_by_index(i)
-        if info.get('maxInputChannels') > 0:
-            print(f"input device: {i} - {info['name']}" ) 
-    stream = audio.open(format=FORMAT, channels=CHANNELS, rate=RATE, input_device_index=2,input=True, frames_per_buffer=CHUNK, start=False)
-    stream.start_stream()
-    
-    
-    
-    
-    print('Actively Recording')
-    
+
+    print(f"🎤 Using ALSA device {DEVICE}")
+    print("🎙 Actively Recording")
+
     frames = []
     silence_start = 0
-    collecting = False # collecting audio frames
-    
     start_time = time.time()
-    max_total_duration = 30  # seconds — maximum cap
-    INITIAL_DISCARD_DURATION = 0.2  # seconds to skip at start to avoid feedback
-    discard_start_time = start_time
+    max_total_duration = 30
+    INITIAL_DISCARD_DURATION = 0.2
     discarding = True
+    discard_start_time = start_time
 
-    while True:
-        # must check for kill frame for button
-        # Skip initial noisy frames
+    # Stream callback for real-time silence detection
+    def callback(indata, frames_count, time_info, status):
+        nonlocal silence_start, has_voice_activity, discarding, stop_recording, frames
+
         if discarding:
             if time.time() - discard_start_time < INITIAL_DISCARD_DURATION:
-                
-                continue
+                return
             else:
                 discarding = False
-                print("Starting real recording...")
-        # Check max recording cap
-       
-        if time.time() - start_time > max_total_duration:
-            print("Max recording time reached.")
-            break
+                print("✅ Starting real recording...")
 
-        data = stream.read(CHUNK, exception_on_overflow=False)
+        raw = indata.tobytes()
 
-        if not is_silent(data):
-            # ensure there is a .5 second gap to avoid false reading on start up (feedback)
+        if not is_silent(raw):
             print("Heard something.")
-            frames.append(data)
+            frames.append(raw)
             silence_start = 0
             has_voice_activity = True
         else:
             print("Silence...")
-            frames.append(data)
+            frames.append(raw)
             if has_voice_activity:
                 if silence_start == 0:
                     silence_start = time.time()
                 elif time.time() - silence_start > SILENCE_DURATION:
                     print("Silence too long. Ending recording.")
-                    break
+                    stop_recording = True
             else:
-                # Haven’t heard anything yet — give more time
                 if time.time() - start_time > SECONDS_BEFORE_RECORDING:
                     print("Initial silence timeout.")
-                    break
+                    stop_recording = True
 
-    # Clean up
-    stream.stop_stream()
-    stream.close()
-    audio.terminate()
+    # Open input stream
+    with sd.InputStream(
+        samplerate=RATE,
+        channels=CHANNELS,
+        dtype=FORMAT,
+        device=DEVICE,
+        blocksize=CHUNK,
+        callback=callback
+    ):
+        while not stop_recording:
+            if time.time() - start_time > max_total_duration:
+                print("⏰ Max recording time reached.")
+                break
+            time.sleep(0.1)  # let callback fill frames
 
-    # Save only if voice detected
     if has_voice_activity:
         filename = generate_name()
-        with wave.open(f'chatbot/recordings/{filename}', 'wb') as wf:
+        path = AUDIO_DIR + filename
+        with wave.open(path, 'wb') as wf:
             wf.setnchannels(CHANNELS)
-            wf.setsampwidth(audio.get_sample_size(FORMAT))
+            wf.setsampwidth(2)  # 16-bit = 2 bytes
             wf.setframerate(RATE)
             wf.writeframes(b''.join(frames))
-        print(f"Saved Recording as {filename}")
-        return f'chatbot/recordings/{filename}'
+        print(f"💾 Saved Recording as {path}")
+        return path
     else:
         print("No speech detected.")
-        return '[BLANK]'
-    
+        return "[BLANK]"
 
     
 async def play_output_with_face_tracking(file_path, playing_output, stop_face_tracking):
@@ -275,7 +253,7 @@ async def face_tracking(pi, cam, stop_event, pan_angle, tilt_angle):
 
 async def process_prompt_and_reposition(pi, picam2, pan_angle, tilt_angle, face_lost, face_lost_threshold, face_found_event):
  
-    filename = await asyncio.to_thread(listen_for_prompt)
+    
     face_found = await face_repositioning(pi, picam2, pan_angle, tilt_angle)
 
     if not face_found:
@@ -288,6 +266,8 @@ async def process_prompt_and_reposition(pi, picam2, pan_angle, tilt_angle, face_
         print('return to sentry mode!')
         face_found_event.clear()
         return '[SENTRY]', face_lost  # special signal
+    
+    filename = await asyncio.to_thread(listen_for_prompt)
 
     return filename, face_lost
 
@@ -305,6 +285,14 @@ async def main():
     await asyncio.sleep(0.2)
     # Clear Recordings on Start up
     await erase_recordings()
+    
+    pi = pigpio.pi()
+    pi.set_servo_pulsewidth(SERVO_TILT_PIN, 1150)
+    pi.set_servo_pulsewidth(SERVO_PAN_PIN, 600)
+    init_led(pi)
+    
+    if not pi.connected:
+        raise RuntimeError("Failed to connect to pigpio daemon")
     
     # Global Time Managment
     last_face_seen_time = None
@@ -331,7 +319,7 @@ async def main():
     # 4. Speaking - GREEN static light
     
     # Start LED blinker 1. SEARCHING
-    red_blinker = asyncio.create_task(blink_led(pin=LED_RED_PIN,
+    red_blinker = asyncio.create_task(blink_led(pin=LED_RED_PIN, pi=pi,
                                             blink_interval_ms=500,
                                             stop_event=stop_red_blink))
     
@@ -342,12 +330,7 @@ async def main():
     
     
     # Configure Pigmoid Servo Control
-    pi = pigpio.pi()
-    pi.set_servo_pulsewidth(SERVO_TILT_PIN, 1150)
-    pi.set_servo_pulsewidth(SERVO_PAN_PIN, 600)
-    
-    if not pi.connected:
-        raise RuntimeError("Failed to connect to pigpio daemon")
+   
     
     # Init kill Switch
     # asyncio.create_task(kill_switch_watcher(kill_event, pi))
@@ -377,7 +360,7 @@ async def main():
     
     # Face Lost threshold
     face_lost = 0
-    face_lost_threshold = 3
+    face_lost_threshold = 4
     
     # Chatbot variables
     sentence = None
@@ -409,12 +392,12 @@ async def main():
             print('STOP RED LED BLINKING')
             stop_red_blink.set()
             await red_blinker
-            
+            #enable_led(LED_RED_PIN, pi)
             
             print("now listening - say 'stop listening' to stop")
             while True:
                 print('ENABLE REDLED')
-                enable_led(LED_RED_PIN)
+                enable_led(LED_RED_PIN, pi)
             
                 filename, face_lost = await process_prompt_and_reposition(pi, picam2, pan_angle, tilt_angle, face_lost, face_lost_threshold, face_found_event)
 
@@ -427,15 +410,17 @@ async def main():
 
                 print(f"here is filename: {filename}")
 
-            if face_lost >= face_lost_threshold:
+            if (face_lost >= (face_lost_threshold)):
                 sentence = '[BLANK]'
+                
             else:
                 # 3. Thinking
-                disable_led(LED_RED_PIN)
+                disable_led(LED_RED_PIN, pi)
                 stop_green_blink.clear()  # Ensure the blink loop can run
                 stop_green_blink = asyncio.Event()
                 green_blinker = asyncio.create_task(blink_led(
                     pin=LED_GREEN_PIN,
+                    pi=pi,
                     blink_interval_ms=500,
                     stop_event=stop_green_blink
                 ))
@@ -508,13 +493,13 @@ async def main():
 
                 elif hasDiscoBiscuits(sentence):
                     # play output without async determiner
-                    enable_led(LED_GREEN_PIN)  # Solid green during speech
+                    enable_led(LED_GREEN_PIN, pi)  # Solid green during speech
                     # await play_output_blocking('presets/easter_eggs/disco_biscuits.wav')
                     await play_audio('presets/easter_eggs/disco_biscuits.wav', kill_event=kill_event)
-                    disable_led(LED_GREEN_PIN)  # Solid green during speech
+                    disable_led(LED_GREEN_PIN, pi)  # Solid green during speech
                 elif hasDropBeat(sentence):
                     # -- CONTINUE HERE REUSE BUFFER MUSIC FOR CLARITY? MAKE GENRIC EASTER EGG EVENT?? -
-                    enable_led(LED_GREEN_PIN)
+                    enable_led(LED_GREEN_PIN, pi)
                     # play random file from easter_eggs/beats with face tracking!
                     if face_tracking_task is None or face_tracking_task.done():
                         stop_face_tracking.clear()  # Ensure it can run again
@@ -537,11 +522,11 @@ async def main():
                         
                     
                     
-                    disable_led(LED_GREEN_PIN)
+                    disable_led(LED_GREEN_PIN, pi)
                 elif hasDance(sentence):
                     # ALMOST WORKS BUT DOESNT CANCEL AUDIO!
                     playing_output.clear()
-                    enable_led(LED_GREEN_PIN)
+                    enable_led(LED_GREEN_PIN, pi)
                     random_song_file = pick_random_file('presets/easter_eggs/songs')
                      
                     play_egg = asyncio.create_task(play_audio(random_song_file, stop_event=playing_output, kill_event=kill_event))
@@ -554,7 +539,7 @@ async def main():
                     playing_output.set()
                     await play_egg
 
-                    disable_led(LED_GREEN_PIN)
+                    disable_led(LED_GREEN_PIN, pi)
                     # Assume eancing you have lost face
                     face_lost = face_lost_threshold
                     
@@ -577,11 +562,12 @@ async def main():
                     
                     # --- LED LOGIC 3.  ---
                     print('stop red led static and start green blink')
-                    disable_led(LED_RED_PIN)  # Now using brain -> Green LED
+                    disable_led(LED_RED_PIN, pi)  # Now using brain -> Green LED
                     stop_green_blink.clear()  # Ensure the blink loop can run
                     stop_green_blink = asyncio.Event()
                     green_blinker = asyncio.create_task(blink_led(
                         pin=LED_GREEN_PIN,
+                        pi=pi,
                         blink_interval_ms=500,
                         stop_event=stop_green_blink
                     ))
@@ -607,7 +593,7 @@ async def main():
                     stop_green_blink.set()
                     await green_blinker
                     print('stop green blink led ')
-                    enable_led(LED_GREEN_PIN)  # Solid green during speech
+                    enable_led(LED_GREEN_PIN, pi)  # Solid green during speech
                     print('start green led static')
                     
                     # Stop Thinking Music
@@ -627,7 +613,7 @@ async def main():
                     if playing_output.is_set():
                         print("⏳ Waiting for playback to finish...")
                         await playing_output.wait()
-                    disable_led(LED_GREEN_PIN)  # Turn off once speech starts
+                    disable_led(LED_GREEN_PIN, pi)  # Turn off once speech starts
                 
                                   
                 
@@ -649,7 +635,7 @@ async def main():
             print('start red led blink')
             stop_red_blink.clear() 
             stop_red_blink = asyncio.Event()
-            red_blink_task = asyncio.create_task(blink_led(LED_RED_PIN, 500, stop_red_blink))
+            red_blink_task = asyncio.create_task(blink_led(LED_RED_PIN, pi, 500, stop_red_blink))
             
             x, y, pan_angle, tilt_angle = await asyncio.create_task(sentry_sweepV4(pi, picam2, face_found_event))
             
@@ -659,6 +645,8 @@ async def main():
         
         pi.set_servo_pulsewidth(SERVO_TILT_PIN, 0)
         pi.set_servo_pulsewidth(SERVO_PAN_PIN, 0)
+        disable_led(LED_GREEN_PIN, pi)
+        disable_led(LED_RED_PIN, pi)
         pi.stop()
         picam2.stop()
         
@@ -668,18 +656,13 @@ async def main():
 if __name__ == "__main__":
     
     try:
-        # Init LED outside of Async Loop
-        init_led()
-        # init_button() # Dont init button happening in runner guarenteed.
         
         asyncio.run(main())
     except asyncio.CancelledError:
         print("Main loop cancelled.")
     finally:
         print('Cleaning Up LED')
-        disable_led(LED_RED_PIN)
-        disable_led(LED_GREEN_PIN)
-        gpio.cleanup()
+        
         
 
 
